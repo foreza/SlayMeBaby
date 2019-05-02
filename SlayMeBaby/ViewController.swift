@@ -21,5 +21,20 @@ class ViewController: UIViewController {
     }
 
 
+    @IBAction func SubmitSessionReady(_ sender: Any) {
+        
+    }
+    
+    @IBAction func SubmitSessionPause(_ sender: Any) {
+        
+    }
+    
+    @IBAction func SubmitSessionNext(_ sender: Any) {
+        
+    }
+    
+    @IBAction func SubmitSessionEnd(_ sender: Any) {
+        
+    }
 }
 
