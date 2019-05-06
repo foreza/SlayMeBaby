@@ -8,15 +8,30 @@
 
 import UIKit
 import Firebase
+import AVFoundation         // JC: Required for audio playback
+
+
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
-
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        
+        // Init Firebase once on app starup
+        FirebaseApp.configure()
+        
+        // set the app’s audio session category to AVAudioSessionCategoryPlayback.
+        let audioSession = AVAudioSession.sharedInstance()
+        
+        do {
+            try audioSession.setCategory(AVAudioSessionCategoryPlayback)
+        } catch {
+            print("Setting category to AVAudioSessionCategoryPlayback failed.")
+        }
+    
                 
         return true
     }

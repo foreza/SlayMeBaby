@@ -8,24 +8,92 @@
 
 import UIKit
 import Firebase
+import AVKit
+import AVFoundation
 
 
 
 class ViewController: UIViewController {
     
-
+    var player:AVPlayer?                // Our Audio Player
+    var playerItem:AVPlayerItem?        // Our chosen item to play
+    
+    var playerIsPlaying:Bool?           //
+    var playerTrackName:String?
+    var playerTrackArtist:String?
+    
+    
+    // Session management
+    var roomParticipants:[String] = []
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Init Firebase
-        FirebaseApp.configure()
-
+        // Do anything else here
+        initializeController();
+    }
+    
+    func initializeController(){
+        
+        playerIsPlaying = false;            // On init, the player should not be playing
+     
+        loadPlayerItemIntoPlayer()
+        
     }
     
     
-    func database_createNewListeningSession(){
+    
+    func loadPlayerItemIntoPlayer() {
         
-        // Get the DB
+        let url = URL(string: "http://107.170.192.117/resume/carelesswhisper.mp3")       // Set the URL (hard code right now for proof of concept
+        
+        let playerItem:AVPlayerItem = AVPlayerItem(url: url!)                           // Set player Item to the url above
+        
+        player = AVPlayer(playerItem: playerItem)                                       // set player to play the player item
+        
+        
+    }
+    
+    
+    // Function to get player's playback status (player has not yet begun playing)
+    func getPlayerPlayBackIsReady(){
+        
+        if (player?.currentItem?.status == AVPlayerItemStatus.readyToPlay){
+            print("Ready to play");
+            playAudio()
+        } else {
+            print("Buffering");
+        }
+    }
+    
+    // Play the player's loaded track
+    func playAudio(){
+        player?.playImmediately(atRate: 1.0);
+    }
+    
+    
+    
+    // MARK: IBAction triggers
+    
+    @IBAction func StartSlay(_ sender: Any) {
+        // database_createNewListeningSession()
+        getPlayerPlayBackIsReady()
+    }
+    
+    
+    @IBAction func EndSlay(_ sender: Any) {
+        DB_getAllSessions()
+    }
+    
+    
+    
+    // MARK: DATABASE OPERATIONS
+    
+    // DB operation to create a new listening session
+    func DB_createNewSession(){
+        
+        // Get the DB (we don't need a strong ref to this)
         let db = Firestore.firestore()
         var ref: DocumentReference? = nil
         
@@ -44,8 +112,8 @@ class ViewController: UIViewController {
         }
     }
     
-    
-    func database_getAllSessions(){
+    // DB operation to get all sessions
+    func DB_getAllSessions(){
         
         // Get the DB
         let db = Firestore.firestore()
@@ -58,28 +126,32 @@ class ViewController: UIViewController {
                 }
             }
         }
-        
-        
     }
-
+    
+    func DB_getCurrentSessionInfo(sessionID : String) -> String {
+        
+        return ""
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
 
     
-    
-    
-    @IBAction func StartSlay(_ sender: Any) {
-        database_createNewListeningSession()
-    }
-    
-    
-    @IBAction func EndSlay(_ sender: Any) {
-        
-        database_getAllSessions()
-
-    }
+ 
     
 }
 
