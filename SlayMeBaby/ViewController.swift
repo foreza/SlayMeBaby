@@ -17,6 +17,7 @@ class ViewController: UIViewController {
     
     var player:AVPlayer?                // Our Audio Player
     var playerItem:AVPlayerItem?        // Our chosen item to play
+    var playerItemURI:String?
     
     var playerIsPlaying:Bool?           //
     var playerTrackName:String?
@@ -27,6 +28,21 @@ class ViewController: UIViewController {
     var roomParticipants:[String] = []
     
     
+    // UI references
+    @IBOutlet weak var songImageView: UIImageView!
+    @IBOutlet weak var songProgress: UIProgressView!
+    @IBOutlet weak var songName: UILabel!
+    @IBOutlet weak var songArtist: UILabel!
+    
+    
+    @IBOutlet weak var PauseButton: UIButton!
+    @IBOutlet weak var PlayButton: UIButton!
+    @IBOutlet weak var ReadyButton: UIButton!
+    
+    @IBOutlet weak var JoinSessionButton: UIButton!
+    @IBOutlet weak var LeaveSessionButton: UIButton!
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -35,30 +51,12 @@ class ViewController: UIViewController {
     }
     
     func initializeController(){
-        
         playerIsPlaying = false;            // On init, the player should not be playing
-     
-        loadPlayerItemIntoPlayer()
-        
-    }
-    
-    
-    
-    func loadPlayerItemIntoPlayer() {
-        
-        let url = URL(string: "http://107.170.192.117/resume/carelesswhisper.mp3")       // Set the URL (hard code right now for proof of concept
-        
-        let playerItem:AVPlayerItem = AVPlayerItem(url: url!)                           // Set player Item to the url above
-        
-        player = AVPlayer(playerItem: playerItem)                                       // set player to play the player item
-        
-        
     }
     
     
     // Function to get player's playback status (player has not yet begun playing)
     func getPlayerPlayBackIsReady(){
-        
         if (player?.currentItem?.status == AVPlayerItemStatus.readyToPlay){
             print("Ready to play");
             playAudio()
@@ -70,23 +68,50 @@ class ViewController: UIViewController {
     // Play the player's loaded track
     func playAudio(){
         player?.playImmediately(atRate: 1.0);
+        
+        // TODo: notify all other sessions to start playing if all of them have asset downloaded
+    }
+    
+    // Pause the current track
+    func pauseAudio(){
+        player?.pause()
+        
+        // TODO: notify all other sessions to pause
     }
     
     
     
     // MARK: IBAction triggers
     
+    // Join Session
     @IBAction func StartSlay(_ sender: Any) {
         // database_createNewListeningSession()
-        getPlayerPlayBackIsReady()
+        DB_createNewSession()
+        
     }
     
-    
+    // Leave Session
     @IBAction func EndSlay(_ sender: Any) {
         DB_getAllSessions()
     }
     
+    // Ready button
+    @IBAction func ButtonReady(_ sender: Any) {
+        // For now, gets the hard coded ID from DB
+        DB_getSongURLByID(songID: "MFuQ4Yc9HqcsYlP5wgLt")
+        // Note: this will update the labels if successful
+    }
     
+    // Play button
+    @IBAction func ButtonPlay(_ sender: Any) {
+        // Checks if player playback is ready and then plays it
+        getPlayerPlayBackIsReady()
+    }
+    
+    // Pause Button
+    @IBAction func ButtonPause(_ sender: Any) {
+        pauseAudio();
+    }
     
     // MARK: DATABASE OPERATIONS
     
@@ -129,8 +154,62 @@ class ViewController: UIViewController {
     }
     
     func DB_getCurrentSessionInfo(sessionID : String) -> String {
-        
         return ""
+    }
+    
+    func DB_getSongURLByID(songID : String){
+        
+        let db = Firestore.firestore()
+        let docRef = db.collection("songs").document(songID)
+        
+        docRef.getDocument { (document, error) in
+            if let document = document, document.exists {
+                let dataDescription = document.data().map(String.init(describing:)) ?? "nil"
+                print("Document data: \(dataDescription)")
+                
+                // Init temp vars
+                let tempTitle:String?, tempArtist:String?, tempURI:String?
+                
+                // Retrieve values from document
+                tempTitle = document.get("songName") as? String
+                tempArtist = document.get("songArtist") as? String
+                tempURI = document.get("uri") as? String
+                
+                // Call all of our setter functions (TODO: find a way to not have to force unwrap these values..)
+                self.view_setSongTitle(title: tempTitle!)
+                self.view_setSongArtist(artist: tempArtist!)
+                self.util_setSongURI(uri: tempURI!)
+                // return "hello"
+            } else {
+                print("Document does not exist")
+                //return "bye"
+            }
+        }
+
+    }
+    
+    // TODO: do some uri validation here
+    func util_setSongURI(uri: String){
+        playerItemURI = uri
+        util_loadPlayerItemFromURIIntoPlayer(uri: uri)
+    }
+    
+    func util_loadPlayerItemFromURIIntoPlayer(uri : String) {
+        
+        let url = URL(string: uri)       // Set the URL (hard code right now for proof of concept
+        
+        let playerItem:AVPlayerItem = AVPlayerItem(url: url!)                           // Set player Item to the url above
+        
+        player = AVPlayer(playerItem: playerItem)                                       // set player to play the player item
+    }
+    
+    
+    func view_setSongTitle(title: String){
+        songName.text = title
+    }
+    
+    func view_setSongArtist(artist: String){
+        songArtist.text = artist
     }
     
     
